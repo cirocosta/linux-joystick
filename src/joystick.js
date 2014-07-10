@@ -18,10 +18,6 @@ function Joystick (id) {
 
 util.inherits(Joystick, EventEmitter);
 
-Joystick.prototype.connect = function () {
-  FS.open("/dev/input/js" + this.id, "r", this.onOpen);
-};
-
 Joystick.prototype.parse = function (buffer) {
   var event = {
     time: buffer.readUInt32LE(0),
@@ -49,12 +45,41 @@ Joystick.prototype.wrap = function (name) {
   };
 };
 
+Joystick.prototype.connect = function () {
+  var scope = this;
+
+  this.on('error', function (err) {
+    switch (err.code) {
+      case 'ENODEV':
+        scope.emit('disconnect', err);
+        break;
+
+      case 'EACCES':
+      case 'ENOENT':
+        scope.emit('notFound', err);
+        break;
+
+      default:
+      console.log(err.code);
+        throw err;
+    }
+  });
+
+  try {
+    FS.open("/dev/input/js" + this.id, "r", this.onOpen);
+  } catch (err) {
+    this.emit('error', err);
+  }
+};
+
 Joystick.prototype.onOpen = function (fd) {
   this.fd = fd;
+  this.emit('connect', true);
   this.startRead();
 };
 
 Joystick.prototype.startRead = function () {
+  console.log("startRead");
   FS.read(this.fd, this.buffer, 0, 8, null, this.onRead);
 };
 
@@ -62,7 +87,7 @@ Joystick.prototype.onRead = function (bytesRead) {
   var event = this.parse(this.buffer);
 
   event.id = this.id;
-  this.emit(event.type, event);
+  this.emit('action', event);
   if (this.fd)
     this.startRead();
 };

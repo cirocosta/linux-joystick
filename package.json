@@ -1,0 +1,16 @@
+{
+  "name": "linux-joystick",
+  "version": "0.0.0",
+  "description": "a fork of nodebits' linux-joystick module for reading js* input",
+  "main": "src/joystick.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cirocosta/linux-joystick.git"
+  },
+  "author": "Ciro S. Costa <ciro9758@gmail.com> (http://www.cirocosta.com.br/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cirocosta/linux-joystick/issues"
+  },
+  "homepage": "https://github.com/cirocosta/linux-joystick"
+}

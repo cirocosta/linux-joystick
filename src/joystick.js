@@ -14,6 +14,26 @@ function Joystick (id) {
   this.wrap("onRead");
   this.id = id;
   this.buffer = new Buffer(8);
+
+  var scope = this;
+
+  this.on('error', function (err) {
+    switch (err.code) {
+      case 'ENODEV':
+        scope.emit('disconnect', err);
+        break;
+
+      case 'EMFILE':
+      case 'EACCES':
+      case 'ENOENT':
+        scope.emit('notFound', err);
+        break;
+
+      default:
+      console.log(err.code);
+        throw err;
+    }
+  });
 }
 
 util.inherits(Joystick, EventEmitter);
@@ -46,25 +66,6 @@ Joystick.prototype.wrap = function (name) {
 };
 
 Joystick.prototype.connect = function () {
-  var scope = this;
-
-  this.on('error', function (err) {
-    switch (err.code) {
-      case 'ENODEV':
-        scope.emit('disconnect', err);
-        break;
-
-      case 'EACCES':
-      case 'ENOENT':
-        scope.emit('notFound', err);
-        break;
-
-      default:
-      console.log(err.code);
-        throw err;
-    }
-  });
-
   try {
     FS.open("/dev/input/js" + this.id, "r", this.onOpen);
   } catch (err) {
@@ -79,7 +80,6 @@ Joystick.prototype.onOpen = function (fd) {
 };
 
 Joystick.prototype.startRead = function () {
-  console.log("startRead");
   FS.read(this.fd, this.buffer, 0, 8, null, this.onRead);
 };
 
@@ -97,8 +97,8 @@ Joystick.prototype.write = function (code) {
 };
 
 Joystick.prototype.close = function (callback) {
-  FS.close(this.fd, callback);
-  this.fd = undefined;
+  if (this.fd)
+    (FS.close(this.fd, callback), this.fd = undefined);
 };
 
 module.exports = Joystick;

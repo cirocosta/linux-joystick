@@ -3,11 +3,31 @@
 var FS = require('fs')
   , EventEmitter = require('events').EventEmitter;
 
-function parse(buffer) {
+/**
+ * Constructor for a Joytstick device
+ * @param {number} id the ID of the js* input to
+ * connect to.
+ */
+function Joystick (id) {
+  this.wrap("onOpen");
+  this.wrap("onRead");
+  this.id = id;
+  this.buffer = new Buffer(8);
+}
+
+Joystick.prototype.open = function () {
+  FS.open("/dev/input/js" + id, "r", this.onOpen);
+};
+
+Joystick.prototype = Object.create(EventEmitter.prototype, {
+  constructor: {value: Joystick}
+});
+
+Joystic.prototype.parse = function (buffer) {
   var event = {
     time: buffer.readUInt32LE(0),
     value: buffer.readInt16LE(4),
-    number: buffer[7],
+    number: buffer[7]
   };
   var type = buffer[6];
 
@@ -16,20 +36,7 @@ function parse(buffer) {
   if (type & 0x02) event.type = "axis";
 
   return event;
-}
-
-// Expose as a nice JavaScript API
-function Joystick(id) {
-  this.wrap("onOpen");
-  this.wrap("onRead");
-  this.id = id;
-  this.buffer = new Buffer(8);
-  FS.open("/dev/input/js" + id, "r", this.onOpen);
-}
-
-Joystick.prototype = Object.create(EventEmitter.prototype, {
-  constructor: {value: Joystick}
-});
+};
 
 // Register a bound version of a method and route errors
 Joystick.prototype.wrap = function (name) {
@@ -53,7 +60,7 @@ Joystick.prototype.startRead = function () {
 };
 
 Joystick.prototype.onRead = function (bytesRead) {
-  var event = parse(this.buffer);
+  var event = this.parse(this.buffer);
 
   event.id = this.id;
   this.emit(event.type, event);

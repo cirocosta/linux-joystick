@@ -12,5 +12,8 @@
   "bugs": {
     "url": "https://github.com/cirocosta/linux-joystick/issues"
   },
-  "homepage": "https://github.com/cirocosta/linux-joystick"
+  "homepage": "https://github.com/cirocosta/linux-joystick",
+  "devDependencies": {
+    "mocha": "^1.20.1"
+  }
 }

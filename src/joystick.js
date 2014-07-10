@@ -1,7 +1,8 @@
 'use strict';
 
 var FS = require('fs')
-  , EventEmitter = require('events').EventEmitter;
+  , EventEmitter = require('events').EventEmitter
+  , util = require('util');
 
 /**
  * Constructor for a Joytstick device
@@ -15,15 +16,13 @@ function Joystick (id) {
   this.buffer = new Buffer(8);
 }
 
-Joystick.prototype.open = function () {
-  FS.open("/dev/input/js" + id, "r", this.onOpen);
+util.inherits(Joystick, EventEmitter);
+
+Joystick.prototype.connect = function () {
+  FS.open("/dev/input/js" + this.id, "r", this.onOpen);
 };
 
-Joystick.prototype = Object.create(EventEmitter.prototype, {
-  constructor: {value: Joystick}
-});
-
-Joystic.prototype.parse = function (buffer) {
+Joystick.prototype.parse = function (buffer) {
   var event = {
     time: buffer.readUInt32LE(0),
     value: buffer.readInt16LE(4),
@@ -66,6 +65,10 @@ Joystick.prototype.onRead = function (bytesRead) {
   this.emit(event.type, event);
   if (this.fd)
     this.startRead();
+};
+
+Joystick.prototype.write = function (code) {
+  // TODO write
 };
 
 Joystick.prototype.close = function (callback) {
